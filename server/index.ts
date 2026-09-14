@@ -1,3 +1,6 @@
+import { config } from 'dotenv';
+config();
+
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -546,9 +549,13 @@ app.post('/api/decisions/reject', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT as number, '0.0.0.0', () => {
-    console.log(`Server listening on port ${PORT}`);
-});
+if (!process.env.VERCEL) {
+    app.listen(PORT as number, '0.0.0.0', () => {
+        console.log(`Server listening on port ${PORT}`);
+    });
+}
 
 // Keep event loop alive
 setInterval(() => {}, 1000 * 60 * 60);
+
+export default app;
