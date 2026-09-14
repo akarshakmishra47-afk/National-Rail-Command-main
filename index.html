@@ -1018,8 +1018,7 @@
                                 class="p-4 font-mono text-sm flex-1 overflow-y-auto text-cmd-warning flex flex-col gap-1 bg-[#000] border-t border-gray-800">
                                 <div><span class="text-gray-500">[SYS]</span> AUTH CONFIRMED. CRIS MAINFRAME ONLINE.
                                 </div>
-                                <div><span class="text-cmd-accent">[SYS]</span> ACTION REQUIRED: CLICK 'LIVE RAIL MAP'
-                                    TAB TO ENGAGE SATELLITE LINK.</div>
+                                <div><span class="text-cmd-accent">[SYS]</span> TELEMETRY AND SATELLITE LINK ESTABLISHED.</div>
                                 <div><span class="text-gray-500">[SYS]</span> AWAITING SCENARIO PARAMETERS...</div>
                             </div>
 
@@ -1932,9 +1931,7 @@
             document.getElementById(`tab-${tabId}`).classList.add('active');
 
             if (tabId === 'map') {
-                if (!mapInitialized) {
-                    setTimeout(() => initLeafletMap(), 100);
-                } else {
+                if (mapInitialized && map) {
                     setTimeout(() => map.invalidateSize(), 100);
                 }
             }
@@ -2337,15 +2334,13 @@
                         const currentPos = getPosOnPath(path, progress);
 
                         const svgTrain = `
-                            <div style="transform: scale(${tier.scale}) rotate(0deg);" class="train-icon-wrapper ${isDelayed ? 'delayed' : ''}">
-                                <svg width="14" height="28" viewBox="0 0 14 28" style="filter: drop-shadow(0 0 4px ${zone.color});">
-                                    <rect x="2" y="2" width="10" height="24" rx="3" fill="${isDelayed ? '#ff3333' : zone.color}" stroke="#fff" stroke-width="0.5"/>
-                                    <rect x="3" y="4" width="8" height="5" rx="1" fill="#000"/>
-                                    <rect x="3" y="10" width="8" height="2" fill="rgba(0,0,0,0.3)"/>
+                            <div style="width: 16px; height: 16px; transform: scale(${tier.scale}) rotate(0deg); transform-origin: center;" class="train-icon-wrapper ${isDelayed ? 'delayed' : ''}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="width: 16px !important; height: 16px !important; display: block; filter: drop-shadow(0 0 3px ${zone.color});">
+                                    <path d="M12 2L2 22l10-4 10 4L12 2z" fill="${isDelayed ? '#ff3333' : zone.color}" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/>
                                 </svg>
                             </div>
                         `;
-                        const icon = L.divIcon({ html: svgTrain, className: '', iconSize: [14, 28], iconAnchor: [7, 14] });
+                        const icon = L.divIcon({ html: svgTrain, className: 'bg-transparent border-none', iconSize: [16, 16], iconAnchor: [8, 8] });
                         const marker = L.marker(currentPos, { icon }).addTo(map);
 
                         bindTrainPopup(marker, trnObj.num, trnObj.name, zoneId, zone, from, to, isDelayed);
@@ -3038,6 +3033,8 @@ Rules:
 
                 if (!result.error && result.decisions && result.decisions.length > 0) {
                     result.decisions.forEach(d => {
+                        const dynImpact = (Math.random() * 5 + 1).toFixed(1);
+                        const dynTime = Math.floor(Math.random() * 50) + 10;
                         const actionsHtml = d.actions.map(a => `&gt; ${a}`).join('<br>');
                         const html = `
                             <div class="cmd-panel p-4 border-l-4 border-l-cmd-danger relative overflow-hidden text-sm font-mono mb-4" style="animation: dataLoad 0.5s linear forwards">
@@ -3061,11 +3058,11 @@ Rules:
                                         </div>
                                         <div class="flex justify-between items-center mb-1">
                                             <span>NETWORK LOAD IMPACT:</span>
-                                            <span class="text-cmd-warning">+4.2%</span>
+                                            <span class="text-cmd-warning">+${dynImpact}%</span>
                                         </div>
                                         <div class="flex justify-between items-center border-t border-gray-800 pt-1 mt-1">
                                             <span class="text-cmd-success font-bold">ESTIMATED TIME SAVED:</span>
-                                            <span class="text-cmd-success font-bold blink">+45 MINS</span>
+                                            <span class="text-cmd-success font-bold blink">+${dynTime} MINS</span>
                                         </div>
                                     </div>
                                 </div>
@@ -3122,6 +3119,8 @@ Rules:
             };
             const nodesList = diversionNodes[zoneId] || diversionNodes['DEFAULT'];
             const diversionNode = nodesList[Math.floor(Math.random() * nodesList.length)];
+            const dynImpact = (Math.random() * 5 + 1).toFixed(1);
+            const dynTime = Math.floor(Math.random() * 50) + 10;
 
             const html = `
                 <div class="cmd-panel p-4 border-l-4 border-l-cmd-danger relative overflow-hidden text-sm font-mono mb-4" style="animation: dataLoad 0.5s linear forwards">
@@ -3145,11 +3144,11 @@ Rules:
                             </div>
                             <div class="flex justify-between items-center mb-1">
                                 <span>NETWORK LOAD IMPACT:</span>
-                                <span class="text-cmd-warning">+4.2%</span>
+                                <span class="text-cmd-warning">+${dynImpact}%</span>
                             </div>
                             <div class="flex justify-between items-center border-t border-gray-800 pt-1 mt-1">
                                 <span class="text-cmd-success font-bold">ESTIMATED TIME SAVED:</span>
-                                <span class="text-cmd-success font-bold blink">+45 MINS</span>
+                                <span class="text-cmd-success font-bold blink">+${dynTime} MINS</span>
                             </div>
                         </div>
                     </div>
@@ -3188,6 +3187,12 @@ Rules:
         function resolveDecision(btn, action) {
             const card = btn.closest('.cmd-panel');
             const parentGroup = card.parentElement;
+
+            if (action === 'accept') {
+                fetch('/api/decisions/execute', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ decisionId: card.id || 'unknown' }) }).catch(e => console.error(e));
+            } else {
+                fetch('/api/decisions/reject', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ decisionId: card.id || 'unknown' }) }).catch(e => console.error(e));
+            }
 
             // Mark as resolved visually
             card.style.opacity = '0.5';
@@ -3640,6 +3645,11 @@ Rules:
             const delayVal = parseInt(document.getElementById('delay-val').value);
             const weather = document.getElementById('delay-weather').value;
             const cong = parseInt(document.getElementById('delay-cong').value);
+            const hour = parseInt(document.getElementById('delay-hour').value);
+            
+            // Try to get search input value if any, else default to '22416'
+            const trainInput = document.getElementById('delay-train-search');
+            const trainId = trainInput && trainInput.value ? trainInput.value : '22416';
 
             btn.disabled = true;
             btn.innerHTML = `<span class="rv-spin" style="font-size:16px">⟳</span> Analyzing...`;
@@ -3649,10 +3659,23 @@ Rules:
                 </div>
             `;
 
-            setTimeout(() => {
-                const pd = delayVal + (weather === 'rain' ? 22 : weather === 'heavy_rain' ? 38 : weather === 'fog' ? 18 : 5) + Math.round(cong / 9);
-                const sev = pd > 45 ? 'HIGH' : pd > 25 ? 'MEDIUM' : 'LOW';
+            fetch('/api/predict/delay', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ trainId, minutes: delayVal, reason: weather, congestion: cong, hour })
+            }).then(r => r.json()).then(data => {
+                const pd = data.predictedDelay || delayVal;
+                const sev = data.severity || (pd > 45 ? 'HIGH' : pd > 25 ? 'MEDIUM' : 'LOW');
+                const conf = data.confidence || 85;
                 const color = svCo(sev);
+                
+                const factorsHtml = (data.factors && Array.isArray(data.factors) && data.factors.length > 0) 
+                    ? data.factors.map(f => `<div class="rv-bullet"><span class="rv-bullet-icon text-cmd-warning">▸</span><span class="rv-bullet-text">${f}</span></div>`).join('') 
+                    : `
+                        <div class="rv-bullet"><span class="rv-bullet-icon text-cmd-warning">▸</span><span class="rv-bullet-text">Weather conditions reducing safe operating speed on corridor</span></div>
+                        <div class="rv-bullet"><span class="rv-bullet-icon text-cmd-warning">▸</span><span class="rv-bullet-text">Station congestion creating platform hold-back at next major junction</span></div>
+                        <div class="rv-bullet"><span class="rv-bullet-icon text-cmd-warning">▸</span><span class="rv-bullet-text">Cascading delay from preceding train occupying track slot</span></div>
+                    `;
 
                 resContainer.innerHTML = `
                 <div class="rv-fade-in flex flex-col gap-3">
@@ -3660,31 +3683,34 @@ Rules:
                         <div style="font-size:11px;color:#4A6580;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:7px">Predicted Delay</div>
                         <div style="font-size:54px;font-weight:900;color:${color};font-family:'JetBrains Mono',monospace;line-height:1;margin-bottom:5px">${pd}<span style="font-size:20px;font-weight:400"> min</span></div>
                         <div style="display:inline-block;background:${color}18;color:${color};padding:3px 12px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.09em;margin-bottom:10px">${sev} SEVERITY</div>
-                        <div style="height:5px;background:#000;border-radius:3px;overflow:hidden"><div style="height:100%;width:85%;background:${color};border-radius:3px"></div></div>
-                        <div style="font-size:11px;color:#4A6580;margin-top:4px">Model confidence: 85%</div>
+                        <div style="height:5px;background:#000;border-radius:3px;overflow:hidden"><div style="height:100%;width:${conf}%;background:${color};border-radius:3px"></div></div>
+                        <div style="font-size:11px;color:#4A6580;margin-top:4px">Model confidence: ${conf}%</div>
                     </div>
                     <div class="rv-card" style="padding:14px">
                         <div class="rv-section-title">DELAY FACTORS</div>
-                        <div class="rv-bullet"><span class="rv-bullet-icon text-cmd-warning">▸</span><span class="rv-bullet-text">Weather conditions reducing safe operating speed on corridor</span></div>
-                        <div class="rv-bullet"><span class="rv-bullet-icon text-cmd-warning">▸</span><span class="rv-bullet-text">Station congestion creating platform hold-back at next major junction</span></div>
-                        <div class="rv-bullet"><span class="rv-bullet-icon text-cmd-warning">▸</span><span class="rv-bullet-text">Cascading delay from preceding train occupying track slot</span></div>
+                        ${factorsHtml}
                     </div>
                     <div class="rv-card" style="padding:14px;border-color:rgba(0,229,255,0.28)">
                         <div class="rv-section-title text-cmd-accent">AI RECOMMENDATION</div>
-                        <div style="font-size:14px;color:#E8F4FD;line-height:1.6;margin-bottom:10px">Pre-position at Platform 4, Bhopal Junction and issue advisory to 3 downstream stations.</div>
+                        <div style="font-size:14px;color:#E8F4FD;line-height:1.6;margin-bottom:10px">${data.recommendation || 'Pre-position at next major junction and issue advisory to downstream stations.'}</div>
                         <div class="rv-insight-box" style="border-color:#FF9500">
                             <div style="font-size:10px;color:#FF9500;font-weight:700;margin-bottom:3px;letter-spacing:0.07em">CASCADE RISK</div>
-                            <div style="font-size:13px;color:#8BA8C8;line-height:1.45">3 trains behind may face 10-18 min secondary delays without intervention.</div>
+                            <div style="font-size:13px;color:#8BA8C8;line-height:1.45">${data.cascadeRisk || '3 trains behind may face secondary delays without intervention.'}</div>
                         </div>
                         <div class="rv-insight-box" style="border-color:#A855F7">
                             <div style="font-size:10px;color:#A855F7;font-weight:700;margin-bottom:3px;letter-spacing:0.07em">INTELLIGENCE INSIGHT</div>
-                            <div style="font-size:13px;color:#8BA8C8;line-height:1.45">Historical pattern: this corridor recovers ~60% of delays post-Nagpur on clear weather windows.</div>
+                            <div style="font-size:13px;color:#8BA8C8;line-height:1.45">${data.insight || 'Historical pattern: this corridor recovers ~60% of delays post-Nagpur on clear weather windows.'}</div>
                         </div>
                     </div>
                 </div>`;
                 btn.disabled = false;
                 btn.innerHTML = `⚡ RUN DELAY PREDICTION`;
-            }, 1200);
+            }).catch(e => {
+                console.error(e);
+                resContainer.innerHTML = '<div class="rv-card text-cmd-danger text-center p-4">Error computing delay propagation. Please try again.</div>';
+                btn.disabled = false;
+                btn.innerHTML = `⚡ RUN DELAY PREDICTION`;
+            });
         }
 
         // --- Crowd Intelligence Engine ---
@@ -3711,19 +3737,58 @@ Rules:
                 festival: document.getElementById('crowd-festival-btn').classList.contains('active')
             };
             
-            // If we have AI prediction, use its current_status.crowd_level, otherwise fallback to station.crowd
+            // If we have AI prediction, use its data, otherwise fallback to station defaults
             let currentCrowdLevel = station.crowd;
+            let incomingTrains = station.incoming;
+            let stationStatus = station.status || 'normal';
+            let riskLevel = '';
+            let insights = '';
+            let deployments = null;
+            
             if (aiPrediction && aiPrediction.current_status) {
                 currentCrowdLevel = aiPrediction.current_status.crowd_level;
+                if (aiPrediction.current_status.incoming_trains) incomingTrains = aiPrediction.current_status.incoming_trains;
+                if (aiPrediction.current_status.status) stationStatus = aiPrediction.current_status.status;
+                if (aiPrediction.current_status.risk_level) riskLevel = aiPrediction.current_status.risk_level;
             }
+            if (aiPrediction && aiPrediction.insights) insights = aiPrediction.insights;
+            if (aiPrediction && aiPrediction.recommended_deployments) deployments = aiPrediction.recommended_deployments;
 
             const cCo = currentCrowdLevel > 85 ? '#FF3B60' : currentCrowdLevel > 68 ? '#FF9500' : currentCrowdLevel > 42 ? '#FFD700' : '#00FF94';
+            const statusColor = stationStatus === 'critical' ? '#FF3B60' : stationStatus === 'busy' ? '#FF9500' : '#00FF94';
+            const statusLabel = stationStatus.toUpperCase();
+            
+            let riskBadge = '';
+            if (riskLevel) {
+                const riskColor = riskLevel === 'CRITICAL' ? '#FF3B60' : riskLevel === 'VERY_HIGH' ? '#FF6B35' : riskLevel === 'HIGH' ? '#FF9500' : riskLevel === 'MODERATE' ? '#FFD700' : '#00FF94';
+                riskBadge = `<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:${riskColor}22;color:${riskColor};border:1px solid ${riskColor}44;margin-left:8px;font-weight:700">${riskLevel.replace('_',' ')}</span>`;
+            }
+            
+            let deploymentsHtml = '';
+            if (deployments) {
+                deploymentsHtml = `<div style="font-size:11px;color:#6b7280;margin-top:6px;padding-top:6px;border-top:1px solid #1a2a3a">
+                    <span style="color:#A855F7">⚡</span> RPF: <span class="text-white font-bold">${deployments.rpf_personnel || 0}</span> · 
+                    Counters: <span class="text-white font-bold">${deployments.ticket_counters || 0}</span> · 
+                    Medical: <span class="text-white font-bold">${deployments.medical_units || 0}</span>
+                </div>`;
+            }
+            
+            let insightsHtml = '';
+            if (insights) {
+                insightsHtml = `<div style="font-size:11px;color:#8b9cb5;margin-top:6px;font-style:italic;padding:4px 6px;background:#0d1b2a;border-radius:4px;border-left:2px solid #A855F7">🧠 ${insights}</div>`;
+            }
+            
             document.getElementById('crowd-station-card').innerHTML = `
-                <div class="rv-section-title">CURRENT STATION STATUS</div>
-                <div style="font-size:15px;font-weight:700;margin-bottom:3px">${station.name}</div>
+                <div class="rv-section-title">CURRENT STATION STATUS ${riskBadge}</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+                    <span style="font-size:15px;font-weight:700">${station.name}</span>
+                    <span style="font-size:10px;padding:1px 5px;border-radius:3px;background:${statusColor}22;color:${statusColor};font-weight:600">${statusLabel}</span>
+                </div>
                 <div style="font-size:28px;font-weight:900;color:${cCo};font-family:'JetBrains Mono',monospace;margin-bottom:6px">${currentCrowdLevel}%</div>
                 <div style="height:6px;background:#000;border-radius:3px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:${currentCrowdLevel}%;background:${cCo};border-radius:3px"></div></div>
-                <div style="font-size:12px;color:#4A6580"><span id="station-incoming-count" class="font-bold text-white">${station.incoming}</span> trains arriving · ${station.platforms} platforms</div>
+                <div style="font-size:12px;color:#4A6580"><span id="station-incoming-count" class="font-bold text-white">${incomingTrains}</span> trains arriving · ${station.platforms} platforms</div>
+                ${deploymentsHtml}
+                ${insightsHtml}
             `;
 
             // Render 24h chart
@@ -3766,7 +3831,7 @@ Rules:
             }
 
             try {
-                const res = await fetch('http://localhost:3000/api/network/live', {
+                const res = await fetch('/api/network/live', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ stationCode: station.id })
@@ -3818,9 +3883,10 @@ Rules:
             `;
             if (window.lucide) window.lucide.createIcons();
 
+            let base = station.crowd;
             try {
                 // Call upgraded Crowd AI Backend
-                const crowdRes = await fetch('http://localhost:3000/api/predict/crowd', {
+                const crowdRes = await fetch('/api/predict/crowd', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -3833,11 +3899,13 @@ Rules:
                 
                 if (!crowdRes.ok) throw new Error("Crowd API response not ok");
                 const crowdData = await crowdRes.json();
-                const prediction = crowdData.data.prediction;
+                const prediction = crowdData?.data?.prediction;
                 
                 // Re-render chart and station status using the real AI data
                 renderCrowdStationCard(prediction);
-                const base = prediction.current_status.crowd_level;
+                if (prediction?.current_status?.crowd_level) {
+                    base = prediction.current_status.crowd_level;
+                }
 
                 // Fetch Dynamic Station Weather
                 let weatherCode = 0;
@@ -3854,7 +3922,7 @@ Rules:
                 }
 
                 // Call Backend Groq API for tactical
-                const apiRes = await fetch('http://localhost:3000/api/predict/tactical', {
+                const apiRes = await fetch('/api/predict/tactical', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -3876,7 +3944,7 @@ Rules:
                     throw new Error("Invalid alerts array");
                 }
 
-                renderTacticalRecommendations(resContainer, base, alerts, prediction.recommended_deployments);
+                renderTacticalRecommendations(resContainer, base, alerts, prediction?.recommended_deployments);
 
             } catch (error) {
                 console.error("Tactical Prediction Failed:", error);
@@ -3926,15 +3994,15 @@ Rules:
                     <div class="grid grid-cols-3 gap-2">
                         <div class="bg-[#041024] border border-[#1a365d] p-2 rounded text-center">
                             <div class="text-[10px] text-gray-400 font-bold mb-1">RPF/SECURITY</div>
-                            <div class="text-lg text-white font-mono">${deployments.rpf || 0}</div>
+                            <div class="text-lg text-white font-mono">${deployments.rpf_personnel || 0}</div>
                         </div>
                         <div class="bg-[#041024] border border-[#1a365d] p-2 rounded text-center">
-                            <div class="text-[10px] text-gray-400 font-bold mb-1">CLEANING</div>
-                            <div class="text-lg text-white font-mono">${deployments.cleaning || 0}</div>
+                            <div class="text-[10px] text-gray-400 font-bold mb-1">MEDICAL</div>
+                            <div class="text-lg text-white font-mono">${deployments.medical_units || 0}</div>
                         </div>
                         <div class="bg-[#041024] border border-[#1a365d] p-2 rounded text-center">
                             <div class="text-[10px] text-gray-400 font-bold mb-1">TICKETING</div>
-                            <div class="text-lg text-white font-mono">${deployments.ticketing || 0}</div>
+                            <div class="text-lg text-white font-mono">${deployments.ticket_counters || 0}</div>
                         </div>
                     </div>
                 </div>`;
@@ -4007,13 +4075,13 @@ Rules:
             document.getElementById(`ag-btn-${id}`).innerText = '↻ RE-RUN';
             document.getElementById(`ag-btn-${id}`).style.opacity = '1';
 
-            const entries = Object.entries(res).slice(0, 5);
+            const entries = Object.entries(res).slice(0, 6);
             document.getElementById(`ag-res-${id}`).innerHTML = entries.map(([k, v]) => {
                 let vHtml = '';
                 if (Array.isArray(v)) {
-                    vHtml = v.slice(0, 1).map(item => typeof item === 'object' ? `${item.location}: ${item.type} (${item.severity})` : item).map(t => `<div style="font-size:11px;color:#8BA8C8;padding-left:5px;border-left:2px solid #1a365d;line-height:1.45">${t}</div>`).join('');
+                    vHtml = v.slice(0, 3).map(item => typeof item === 'object' ? `${item.location || item.type || ''}: ${item.type || item.severity || JSON.stringify(item)}` : item).map(t => `<div style="font-size:11px;color:#8BA8C8;padding-left:5px;border-left:2px solid ${color || '#1a365d'};line-height:1.45;margin-bottom:2px">${t}</div>`).join('');
                 } else {
-                    vHtml = `<div style="font-size:11px;color:#8BA8C8;line-height:1.45">${String(v).slice(0, 100)}</div>`;
+                    vHtml = `<div style="font-size:11px;color:#8BA8C8;line-height:1.45">${String(v).slice(0, 150)}</div>`;
                 }
                 return `<div style="margin-bottom:7px"><div style="font-size:9px;color:#4A6580;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px">${k.replace(/_/g, ' ')}</div>${vHtml}</div>`;
             }).join('');
@@ -4021,52 +4089,69 @@ Rules:
         }
 
         async function fetchMultiAgentInsights() {
-            const AI_SCENARIOS = [
-                {
-                    ops: { critical_issues: "Heavy fog NDLS-CNB sector. 14 trains delayed >3hrs.", alerts: "Low-visibility protocols active." },
-                    sched: { rerouting: "Divert freight via Moradabad.", speed_adjustments: "60km/h speed limit.", priority_changes: "Priority to Rajdhani." },
-                    plat: { platform_changes: "NDLS Pt 1-4 held for arriving premium trains.", conflict_resolutions: "Shift departures." },
-                    crowd: { gate_changes: "Open Ajmeri Gate auxiliary exit.", staff_deployment: "+20 RPF deployed.", passenger_routing: "Segregate flow." },
-                    emrg: { risk_level: "MEDIUM", incidents: "Visibility drop.", action_plan: "Fog pass devices distributed.", passenger_impact: "45,000 pax delayed." }
-                },
-                {
-                    ops: { critical_issues: "Waterlogging Kurla-Sion. Local trains suspended on slow line.", alerts: "Halt incoming at Kalyan." },
-                    sched: { rerouting: "Terminate 12124 at Pune.", speed_adjustments: "10km/h restriction on submerged tracks." },
-                    plat: { platform_changes: "CSMT Pt 15-18 reserved for stranded outstation trains." },
-                    crowd: { gate_changes: "Close flooded Dadar subway.", staff_deployment: "Deploy NDRF liaison + 30 RPF at CSMT." },
-                    emrg: { risk_level: "CRITICAL", incidents: "Flash flooding on tracks.", action_plan: "De-energize OHE." }
-                },
-                {
-                    ops: { critical_issues: "Unprecedented surge at Anand Vihar (ANVT). Train 12394 at 250% capacity." },
-                    sched: { rerouting: "Inject empty rake from Sahibabad yard.", priority_changes: "Green channel to Patna (PNBE)." },
-                    plat: { platform_changes: "ANVT Pt 1-3 dedicated to eastbound specials.", conflict_resolutions: "Use pull-push locos." },
-                    crowd: { gate_changes: "All 6 entry gates on scanner-only.", passenger_routing: "Color-coded queues for Bihar bound." },
-                    emrg: { risk_level: "HIGH", incidents: "Crowd crush potential at unreserved coaches.", action_plan: "Medical kiosks standby." }
-                },
-                {
-                    ops: { critical_issues: "25kV OHE failure near Warangal. Pantograph entanglement.", action_required: "Tower car dispatched." },
-                    sched: { rerouting: "Single-line working on DOWN line.", speed_adjustments: "30km/h block speed.", priority_changes: "Chennai Rajdhani priority." },
-                    plat: { platform_changes: "Vijayawada (BZA) platforms reassigned for stacked trains." },
-                    crowd: { staff_deployment: "Deploy commercial staff to distribute water/food to stalled trains." },
-                    emrg: { risk_level: "MEDIUM", incidents: "Trains stalled without AC.", action_plan: "WDP4D diesel loco attached." }
-                },
-                {
-                    ops: { critical_issues: "Ultrasonic flaw detector flags micro-fracture at Santragachi.", alerts: "UP line suspended." },
-                    sched: { rerouting: "Divert via Amta line.", speed_adjustments: "20km/h manual clamping speed restriction." },
-                    plat: { platform_changes: "Howrah (HWH) platform reshuffle.", crowd_redistribution: "Clear South concourse for delayed pax." },
-                    crowd: { passenger_routing: "Shift departing crowds to New Complex.", staff_deployment: "+15 RPF at HWH Cab Road." },
-                    emrg: { risk_level: "HIGH", incidents: "Track clamping initiated. Prevented derailment.", passenger_impact: "22,000 pax delayed." }
+            try {
+                const res = await fetch('/api/agents/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scenario: { type: 'delay_cascade', params: { train: '22416', delayMinutes: 60 } } })
+                });
+                const analysis = await res.json();
+                
+                // Use the rich fallback data as a base, then overlay API results
+                let data = JSON.parse(JSON.stringify(AGENT_FALLBACK));
+                
+                if (analysis.agentResults && Array.isArray(analysis.agentResults)) {
+                    analysis.agentResults.forEach(r => {
+                        const recs = r.recommendation ? r.recommendation.split('.').filter(s => s.trim().length > 5).slice(0, 4) : [];
+                        if (r.agentId === 'operations') {
+                            data.ops = { 
+                                status: r.systemStatus || 'MONITORING', 
+                                critical_issues: recs.slice(0, 2), 
+                                alerts: recs.slice(2, 4),
+                                insight: r.recommendation || data.ops.insight
+                            };
+                        }
+                        if (r.agentId === 'schedule') {
+                            data.sched = { 
+                                rerouting: recs.slice(0, 2), 
+                                speed_adjustments: recs.slice(2, 3), 
+                                insight: r.recommendation || data.sched.insight
+                            };
+                        }
+                        if (r.agentId === 'platform') {
+                            data.plat = { 
+                                platform_changes: recs.slice(0, 2), 
+                                conflict_resolutions: recs.slice(2, 4),
+                                insight: r.recommendation || data.plat.insight
+                            };
+                        }
+                        if (r.agentId === 'crowd') {
+                            data.crowd = { 
+                                gate_changes: recs.slice(0, 2), 
+                                staff_deployment: recs.slice(2, 3),
+                                insight: r.recommendation || data.crowd.insight
+                            };
+                        }
+                    });
                 }
-            ];
 
-            // Simulate AI processing delay
-            await new Promise(r => setTimeout(r, 1200));
-
-            // Randomly select a scenario
-            const data = AI_SCENARIOS[Math.floor(Math.random() * AI_SCENARIOS.length)];
+                // Emergency agent uses synthesized data
+                if (analysis.systemStatus) {
+                    data.emrg = {
+                        ...data.emrg,
+                        risk_level: analysis.systemStatus === 'OPTIMAL' ? 'MODERATE' : 'HIGH',
+                        system_status: analysis.systemStatus,
+                        confidence: analysis.confidence ? (analysis.confidence * 100).toFixed(0) + '%' : 'N/A'
+                    };
+                }
             
-            logAgent(`[SYS] ORCHESTRATION COMPLETE. SCENARIO LOADED.`);
-            return data;
+                logAgent(`[SYS] ORCHESTRATION COMPLETE. SCENARIO LOADED.`);
+                return data;
+            } catch (e) {
+                console.error(e);
+                logAgent(`[SYS] AGENT API FAILED. FALLING BACK.`);
+                return AGENT_FALLBACK;
+            }
         }
 
         function runAgent(id) {
@@ -4191,44 +4276,23 @@ Rules:
             const M = delayMins / 60;
 
             let res = { risk: 'HIGH', affected_trains: 0, platform_conflicts: 0, passenger_impact: 0, cascade: [], options: [], recs: [] };
-
-            if (currentSimScenario === 'delay') {
-                res.affected_trains = Math.round(12 * M);
-                res.platform_conflicts = Math.round(5 * M);
-                res.passenger_impact = Math.round(4300 * M);
-                res.risk = M > 1 ? 'CRITICAL' : 'HIGH';
-                res.cascade = [
-                    { train: 'Downstream Exp 1', reason: 'Platform held for ' + selectedTrain.split(' ')[0], delay: Math.round(18 * M) },
-                    { train: 'Connecting Pass', reason: 'Track slot occupied', delay: Math.round(12 * M) },
-                    { train: 'Freight Loco', reason: 'Ripple effect', delay: Math.round(8 * M) }
-                ];
-                res.recs = ['Reroute upstream traffic', 'Reassign platform slots at next junction', 'Notify downstream station masters'];
-            } else if (currentSimScenario === 'festival') {
-                res.affected_trains = Math.round(6 * M);
-                res.platform_conflicts = Math.round(8 * M);
-                res.passenger_impact = Math.round(18500 * M);
-                res.risk = M > 1 ? 'CRITICAL' : 'HIGH';
-                res.options = [
-                    { via: 'PF 1-3 Concourse Bottleneck', trains: res.platform_conflicts, time: 'Clearing ' + Math.round(20 * M) + ' min' },
-                    { via: 'Holding Area Capacity', trains: 0, time: Math.min(100, Math.round(70 * M)) + '% Full' }
-                ];
-                res.recs = ['Open auxiliary gates immediately', 'Deploy extra RPF at bottleneck points', 'Clear holding areas and redirect flow'];
-            } else if (currentSimScenario === 'blockage') {
-                res.affected_trains = Math.round(22 * M);
-                res.platform_conflicts = Math.round(11 * M);
-                res.passenger_impact = Math.round(9800 * M);
-                res.risk = 'CRITICAL';
-                res.options = [
-                    { via: 'Alternate Sector A', trains: Math.round(8 * M), time: Math.round(40 * M) + ' min delay' },
-                    { via: 'Freight Loop Diversion', trains: Math.round(14 * M), time: Math.round(75 * M) + ' min delay' }
-                ];
-                res.recs = ['Initiate single-line working on adjacent track', 'Divert freight to external loops', 'Issue emergency notifications to station masters'];
-            }
-
             btn.disabled = true;
             btn.innerHTML = `<span class="rv-spin mr-2 inline-block">⟳</span> [ /// SIMULATING CASCADE... /// ]`;
             
-            setTimeout(() => {
+            fetch('/api/simulate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ scenario: { type: currentSimScenario === 'delay' ? 'delay_cascade' : 'blockage', params: { train: selectedTrain.split(' ')[0], delayMinutes: delayMins } } })
+            }).then(r => r.json()).then(backendRes => {
+                if (backendRes.affected_trains !== undefined) {
+                    res = backendRes;
+                } else if (backendRes.agentResults && backendRes.agentResults.length > 0) {
+                    res.affected_trains = Math.round(12 * M);
+                    res.platform_conflicts = Math.round(5 * M);
+                    res.passenger_impact = Math.round(4300 * M);
+                    res.risk = backendRes.systemStatus || 'HIGH';
+                    res.recs = backendRes.winningStrategy ? backendRes.winningStrategy.recommendation.split('.').filter(Boolean) : res.recs;
+                }
                 let metricsHtml = `
                     <div class="rv-metric-card"><div class="flex justify-center mb-1 text-gray-400"><i data-lucide="train-front" class="w-5 h-5"></i></div><div class="rv-metric-value text-cmd-warning">${res.affected_trains}</div><div class="rv-metric-label">Affected Trains</div></div>
                     <div class="rv-metric-card"><div class="flex justify-center mb-1 text-gray-400"><i data-lucide="alert-triangle" class="w-5 h-5"></i></div><div class="rv-metric-value text-cmd-danger">${res.platform_conflicts}</div><div class="rv-metric-label">Platform Conflicts</div></div>
@@ -4430,22 +4494,30 @@ Rules:
             // Clear initial loading message
             if (feedContainer.innerHTML.includes('INITIALIZING')) feedContainer.innerHTML = '';
 
-            // Find a delayed train
-            const delayedTrains = trains.filter(t => t.isDelayed);
-            let targetTrain = null;
-            if (delayedTrains.length > 0) {
-                targetTrain = delayedTrains[Math.floor(Math.random() * delayedTrains.length)];
-            } else if (trains.length > 0) {
-                targetTrain = trains[Math.floor(Math.random() * trains.length)];
-            }
+            let tNum = "12" + (Math.floor(Math.random() * 900) + 100);
+            let fName = STATIONS[Math.floor(Math.random() * STATIONS.length)].name;
+            let tName = STATIONS[Math.floor(Math.random() * STATIONS.length)].name;
+            while(tName === fName) tName = STATIONS[Math.floor(Math.random() * STATIONS.length)].name;
 
-            if (!targetTrain) return;
+            // Find a delayed train if map is initialized
+            const delayedTrains = trains.filter(t => t.isDelayed);
+            if (delayedTrains.length > 0) {
+                const targetTrain = delayedTrains[Math.floor(Math.random() * delayedTrains.length)];
+                tNum = targetTrain.trainNum;
+                fName = targetTrain.from.name;
+                tName = targetTrain.to.name;
+            } else if (trains.length > 0) {
+                const targetTrain = trains[Math.floor(Math.random() * trains.length)];
+                tNum = targetTrain.trainNum;
+                fName = targetTrain.from.name;
+                tName = targetTrain.to.name;
+            }
 
             const template = socialComplaints[Math.floor(Math.random() * socialComplaints.length)];
             const text = template
-                .replace(/{{TRAIN}}/g, `TRN_${targetTrain.trainNum}`)
-                .replace(/{{FROM}}/g, targetTrain.from.name)
-                .replace(/{{TO}}/g, targetTrain.to.name);
+                .replace(/{{TRAIN}}/g, `TRN_${tNum}`)
+                .replace(/{{FROM}}/g, fName)
+                .replace(/{{TO}}/g, tName);
 
             const handle = ['@rk_sharma_99', '@Priya_Travels', '@tech_nomad', '@VikasGupta_IND', '@daily_commuter'][Math.floor(Math.random() * 5)];
             const time = new Date().toLocaleTimeString('en-US', { hour12: false }).substring(0, 5) + " UTC";
@@ -4476,6 +4548,7 @@ Rules:
 
         // Initialize new UI components on load
         window.addEventListener('DOMContentLoaded', () => {
+            initLeafletMap();
             initDropdowns();
             fetchLiveNews();
 
@@ -4681,6 +4754,7 @@ Rules:
         window.forceSevereWeather = false; // Disabled demonstration mode to use real API
 
     </script>
+    <script src="/integration.js"></script>
 </body>
 
 </html>

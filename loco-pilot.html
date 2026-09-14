@@ -493,7 +493,7 @@
                     <input type="text" id="live-train-input" value="22504" class="bg-[#041024] border border-[#1a365d] text-[#00e5ff] font-bold px-2 py-1 w-20 outline-none focus:border-[#00e5ff]" />
                     <button onclick="window.RailRadarService.startTracking()" class="bg-[#00e5ff]/10 border border-[#00e5ff]/40 text-[#00e5ff] px-3 py-1 hover:bg-[#00e5ff]/20 transition-colors">TRACK TRAIN</button>
                 </div>
-                <div id="live-train-details" class="flex items-center gap-4 hidden">
+                <div id="live-train-details" class="flex items-center gap-4">
                     <div><span class="text-gray-500">TRAIN</span> <span id="hdr-train" class="text-cmd-bright font-bold">---</span></div>
                     <div><span class="text-gray-500">NAME</span> <span id="hdr-name" class="text-[#00e5ff]">---</span></div>
                     <div><span class="text-gray-500">SECTION</span> <span id="hdr-section" class="text-cmd-bright">---</span></div>
@@ -774,13 +774,24 @@
         //  Mid-journey corridor: Bhubaneswar → Visakhapatnam → Vijayawada
         // ─────────────────────────────────────────────────
         const ROUTE_STATIONS = [
-            { id: 'HWH',  name: 'HOWRAH',          lat: 22.5839, lng: 88.3221, dist: 0,   platform: 15 },
-            { id: 'KGP',  name: 'KHARAGPUR JN',    lat: 22.3434, lng: 87.3183, dist: 114, platform: 8  },
+            { id: 'HWH',  name: 'HOWRAH',           lat: 22.5839, lng: 88.3221, dist: 0,   platform: 15 },
+            { id: 'KGP',  name: 'KHARAGPUR JN',     lat: 22.3434, lng: 87.3183, dist: 114, platform: 8  },
             { id: 'BLS',  name: 'BALASORE',         lat: 21.4942, lng: 86.9340, dist: 211, platform: 4  },
+            { id: 'BHC',  name: 'BHADRAK',          lat: 21.0550, lng: 86.5150, dist: 269, platform: 3  },
+            { id: 'CTC',  name: 'CUTTACK',          lat: 20.4600, lng: 85.8700, dist: 340, platform: 2  },
             { id: 'BBS',  name: 'BHUBANESWAR',      lat: 20.2961, lng: 85.8189, dist: 370, platform: 6  },
+            { id: 'KUR',  name: 'KHURDA ROAD JN',   lat: 20.1500, lng: 85.6700, dist: 390, platform: 4  },
+            { id: 'BALU', name: 'BALUGAON',         lat: 19.7400, lng: 85.2000, dist: 440, platform: 2  },
+            { id: 'BAM',  name: 'BRAHMAPUR',        lat: 19.3000, lng: 84.7900, dist: 490, platform: 1  },
+            { id: 'PSA',  name: 'PALASA',           lat: 18.7600, lng: 84.4100, dist: 550, platform: 3  },
+            { id: 'CHE',  name: 'SRIKAKULAM ROAD',  lat: 18.2900, lng: 83.9000, dist: 600, platform: 2  },
+            { id: 'VZM',  name: 'VIZIANAGARAM JN',  lat: 18.1100, lng: 83.4000, dist: 635, platform: 1  },
             { id: 'VSKP', name: 'VISAKHAPATNAM',    lat: 17.6868, lng: 83.2185, dist: 660, platform: 9  },
             { id: 'RJY',  name: 'RAJAHMUNDRY',      lat: 17.0057, lng: 81.7801, dist: 789, platform: 5  },
+            { id: 'EE',   name: 'ELURU',            lat: 16.7100, lng: 81.1000, dist: 872, platform: 2  },
             { id: 'BZA',  name: 'VIJAYAWADA JN',    lat: 16.5193, lng: 80.6278, dist: 930, platform: 10 },
+            { id: 'OGL',  name: 'ONGOLE',           lat: 15.5000, lng: 80.0400, dist: 1008, platform: 1 },
+            { id: 'NLR',  name: 'NELLORE',          lat: 14.4400, lng: 79.9800, dist: 1090, platform: 3 },
             { id: 'MAS',  name: 'CHENNAI CENTRAL',  lat: 13.0827, lng: 80.2707, dist: 1195,platform: 12 }
         ];
 
@@ -1250,7 +1261,9 @@
             document.getElementById('val-visibility').textContent = `${locoState.weather.visibility} m`;
             document.getElementById('val-rainfall').textContent = locoState.weather.rainfall;
 
-            // Section header
+            // Section header and train info
+            document.getElementById('hdr-train').textContent = locoState.trainNumber;
+            document.getElementById('hdr-name').textContent = locoState.trainName;
             document.getElementById('hdr-section').textContent = locoState.location.section;
 
             // Data age

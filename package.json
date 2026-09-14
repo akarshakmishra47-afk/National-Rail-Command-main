@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "tsx server/index.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -15,7 +15,10 @@
     "@google/genai": "^2.22.0",
     "@xyflow/react": "^12.11.0",
     "clsx": "^2.1.1",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "framer-motion": "^12.40.0",
+    "groq-sdk": "^1.5.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.17.0",
     "next": "16.2.7",
@@ -28,13 +31,18 @@
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/leaflet": "^1.9.21",
-    "@types/node": "^20",
+    "@types/node": "^20.19.43",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
+    "serve": "^14.2.6",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.23.13",
     "typescript": "^5"
   }
 }
