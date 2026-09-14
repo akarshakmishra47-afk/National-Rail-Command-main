@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx server/index.ts",
+    "start": "tsx server/index.ts",
     "lint": "eslint"
   },
   "dependencies": {
