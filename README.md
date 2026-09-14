@@ -1,10 +1,10 @@
-# 🚂 RailVerse AI
+# RailVerse AI – Express + Render (Static Frontend)
 
 ### *"The Autonomous Intelligence Layer for Indian Railways"*
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![Express](https://img.shields.io/badge/Express-4.x-000000?style=flat-square&logo=express)](https://expressjs.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-18.x-68A063?style=flat-square&logo=node.js)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript)](https://typescriptlang.org/)
-[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python)](https://python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 ---
@@ -193,7 +193,13 @@ The AI simulates the entire network and produces impacts, risks, and recommended
 
 ## 👥 Team
 
-Built for the **IDNA National Hackathon** by Team RailVerse.
+Built for the **FAR AWAY** by Team Tech Hustlers.
+
+## 👥 Contact
+
+**Maintainer:** Akarsh Mishra – [GitHub @akarshakmishra47-afk](https://github.com/akarshakmishra47-afk)
+
+**Bug reports / feature requests:** Open an issue on the [GitHub repository](https://github.com/akarshakmishra47-afk/National-Rail-Command-main).
 
 ---
 
