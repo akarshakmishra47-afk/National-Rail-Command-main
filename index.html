@@ -3189,9 +3189,9 @@ Rules:
             const parentGroup = card.parentElement;
 
             if (action === 'accept') {
-                fetch('/api/decisions/execute', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ decisionId: card.id || 'unknown' }) }).catch(e => console.error(e));
+                fetch('https://national-rail-command-main.onrender.com/api/decisions/execute', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ decisionId: card.id || 'unknown' }) }).catch(e => console.error(e));
             } else {
-                fetch('/api/decisions/reject', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ decisionId: card.id || 'unknown' }) }).catch(e => console.error(e));
+                fetch('https://national-rail-command-main.onrender.com/api/decisions/reject', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ decisionId: card.id || 'unknown' }) }).catch(e => console.error(e));
             }
 
             // Mark as resolved visually
@@ -3659,7 +3659,7 @@ Rules:
                 </div>
             `;
 
-            fetch('/api/predict/delay', {
+            fetch('https://national-rail-command-main.onrender.com/api/predict/delay', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ trainId, minutes: delayVal, reason: weather, congestion: cong, hour })
@@ -3831,7 +3831,7 @@ Rules:
             }
 
             try {
-                const res = await fetch('/api/network/live', {
+                const res = await fetch('https://national-rail-command-main.onrender.com/api/network/live', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ stationCode: station.id })
@@ -3886,7 +3886,7 @@ Rules:
             let base = station.crowd;
             try {
                 // Call upgraded Crowd AI Backend
-                const crowdRes = await fetch('/api/predict/crowd', {
+                const crowdRes = await fetch('https://national-rail-command-main.onrender.com/api/predict/crowd', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -3922,7 +3922,7 @@ Rules:
                 }
 
                 // Call Backend Groq API for tactical
-                const apiRes = await fetch('/api/predict/tactical', {
+                const apiRes = await fetch('https://national-rail-command-main.onrender.com/api/predict/tactical', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -4090,7 +4090,7 @@ Rules:
 
         async function fetchMultiAgentInsights() {
             try {
-                const res = await fetch('/api/agents/analyze', {
+                const res = await fetch('https://national-rail-command-main.onrender.com/api/agents/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ scenario: { type: 'delay_cascade', params: { train: '22416', delayMinutes: 60 } } })
@@ -4279,7 +4279,7 @@ Rules:
             btn.disabled = true;
             btn.innerHTML = `<span class="rv-spin mr-2 inline-block">⟳</span> [ /// SIMULATING CASCADE... /// ]`;
             
-            fetch('/api/simulate', {
+            fetch('https://national-rail-command-main.onrender.com/api/simulate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ scenario: { type: currentSimScenario === 'delay' ? 'delay_cascade' : 'blockage', params: { train: selectedTrain.split(' ')[0], delayMinutes: delayMins } } })
